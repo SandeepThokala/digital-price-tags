@@ -1,1 +1,1 @@
-# digital-price-tags
+# Digital Price Tags

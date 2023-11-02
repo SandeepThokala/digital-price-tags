@@ -1,24 +1,28 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import { db } from './firebase-config'
+import { collection, getDocs, addDoc } from 'firebase/firestore'
 import SearchItem from './SearchItem'
 import Content from './Content'
+import AddItem from './AddItem'
 
 function App() {
-  const API_URL = "https://raw.githubusercontent.com/wedeploy-examples/supermarket-web-example/master/products.json" // "http://localhost:8000/products.json"
 
   const [items, setItems] = useState([])
   const [search, setSearch] = useState("")
   const [fetchError, setFetchError] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [newTitle, setNewTitle] = useState("")
+  const [newPrice, setNewPrice] = useState("")
+
+  const productCollectionRef = collection(db, "products");
 
   useEffect(() => {
 
     const fetchItems = async () => {
       try {
-        const response = await fetch(API_URL)
-        if (!response.ok) throw Error('Did not reccive expected data')
-        const listItems = await response.json()
-        setItems(listItems)
+        const data = await getDocs(productCollectionRef)
+        setItems(data.docs.map(doc => ({...doc.data(), id: doc.id})))
         setFetchError(null)
       } catch (err) {
         setFetchError(err.message)
@@ -26,6 +30,7 @@ function App() {
         setIsLoading(false)
       }
     }
+
     setTimeout(() => fetchItems(), 1000)
 
   }, [])
@@ -33,13 +38,29 @@ function App() {
   const handleChange = (title, newPrice) => {
     const listItems = items.map(item => item.title === title ? {...item, price: newPrice} : item)
     setItems(listItems)
-    localStorage.setItem('products', JSON.stringify(listItems))
+  }
+
+  const createProduct = async (title, price) => {
+    if (title && price) {
+      try {
+        addDoc(
+          productCollectionRef,
+          {title: title, price: Number(price)}
+        ).then(response => setItems(items.concat({
+          id: response.id,
+          title: newTitle,
+          price: newPrice
+        })))
+      } catch (err) {
+        console.log(err.message)
+      }
+    }
   }
 
   return (
     <>
       <h2>Digital Price Tags</h2>
-      <SearchItem 
+      <SearchItem
         search={search}
         setSearch={setSearch}
       />
@@ -50,6 +71,14 @@ function App() {
           return ((item.title).toLocaleLowerCase()).includes(search.toLocaleLowerCase())
         })}
         handleChange={handleChange}
+      />
+      <AddItem
+        isLoading={isLoading}
+        newPrice={newPrice}
+        setNewPrice={setNewPrice}
+        setNewTitle={setNewTitle}
+        newTitle={newTitle}
+        createProduct={createProduct}
       />
     </>
   )

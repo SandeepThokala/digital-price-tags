@@ -9,7 +9,7 @@ const Content = ({ isLoading, fetchError, items, handleChange }) => {
 
         <ul>
           {!fetchError && !isLoading && items.map(item => (
-            <li key={`key-${item.title}`}>
+            <li key={item.id}>
               <ListItem
                 item={item}
                 handleChange={handleChange}

@@ -11,7 +11,12 @@ const ListItem = ({ item, handleChange }) => {
         value={item.price}
         onChange={(e) => handleChange(item.title, e.target.value)}
       />
-      <button disabled={item.price == price}>Update</button>
+      <button
+        disabled={item.price == price}
+        onClick={console.log('object')}
+      >
+        Update
+      </button>
     </>
   )
 }
